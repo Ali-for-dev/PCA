@@ -6,6 +6,7 @@ import axios from "axios";
 const Welcome = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,16 +19,20 @@ const Welcome = () => {
       }
 
       try {
+        setLoading(true);
         // Set the authorization header for all future requests
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-        const response = await axios.get("/api/v1/auth/me");
+        const response = await axios.get(
+          "http://localhost:5000/api/v1/auth/me",
+          { withCredentials: true }
+        );
         setUser(response.data.user);
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
+        setError(
+          "Impossible de récupérer les données utilisateur. Veuillez vous reconnecter."
+        );
       } finally {
         setLoading(false);
       }
@@ -59,6 +64,26 @@ const Welcome = () => {
     );
   }
 
+  if (error && !user) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6 max-w-md">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate("/login")}
+          className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          Retour à la connexion
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
@@ -83,55 +108,57 @@ const Welcome = () => {
                     User Profile
                   </h3>
 
-                  <div className="mt-5 border-t border-gray-200">
-                    <dl className="divide-y divide-gray-200">
-                      <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt className="text-sm font-medium text-gray-500">
-                          Full name
-                        </dt>
-                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          {user.name}
-                        </dd>
-                      </div>
+                  {user && (
+                    <div className="mt-5 border-t border-gray-200">
+                      <dl className="divide-y divide-gray-200">
+                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                          <dt className="text-sm font-medium text-gray-500">
+                            Full name
+                          </dt>
+                          <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            {user.name}
+                          </dd>
+                        </div>
 
-                      <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt className="text-sm font-medium text-gray-500">
-                          Email address
-                        </dt>
-                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          {user.email}
-                        </dd>
-                      </div>
+                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                          <dt className="text-sm font-medium text-gray-500">
+                            Email address
+                          </dt>
+                          <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            {user.email}
+                          </dd>
+                        </div>
 
-                      <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt className="text-sm font-medium text-gray-500">
-                          Phone number
-                        </dt>
-                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          {user.phoneNumber}
-                        </dd>
-                      </div>
+                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                          <dt className="text-sm font-medium text-gray-500">
+                            Phone number
+                          </dt>
+                          <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            {user.phoneNumber}
+                          </dd>
+                        </div>
 
-                      <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt className="text-sm font-medium text-gray-500">
-                          Address
-                        </dt>
-                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          {user.address.street}, {user.address.city},{" "}
-                          {user.address.state} {user.address.zipCode}
-                        </dd>
-                      </div>
+                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                          <dt className="text-sm font-medium text-gray-500">
+                            Address
+                          </dt>
+                          <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                            {user.address?.street}, {user.address?.city},{" "}
+                            {user.address?.state} {user.address?.zipCode}
+                          </dd>
+                        </div>
 
-                      <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt className="text-sm font-medium text-gray-500">
-                          Role
-                        </dt>
-                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 capitalize">
-                          {user.role}
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
+                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                          <dt className="text-sm font-medium text-gray-500">
+                            Role
+                          </dt>
+                          <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 capitalize">
+                            {user.role}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

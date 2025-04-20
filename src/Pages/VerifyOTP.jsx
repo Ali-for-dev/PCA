@@ -1,95 +1,49 @@
-// src/pages/VerifyOTP.jsx
-import React, { useState, useEffect } from "react";
+// src/pages/VerifyOtp.jsx
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const VerifyOTP = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+const VerifyOtp = () => {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { email } = location.state || {};
 
-  useEffect(() => {
-    // Get email from location state or localStorage
-    const emailFromState = location.state?.email;
-    if (emailFromState) {
-      setEmail(emailFromState);
-      localStorage.setItem("verifyEmail", emailFromState);
-    } else {
-      const savedEmail = localStorage.getItem("verifyEmail");
-      if (savedEmail) {
-        setEmail(savedEmail);
-      } else {
-        // If no email found, redirect to login
-        navigate("/login");
-      }
-    }
-  }, [location, navigate]);
-
-  useEffect(() => {
-    let timer;
-    if (countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-    }
-    return () => clearTimeout(timer);
-  }, [countdown]);
+  const handleChange = (e) => {
+    setOtp(e.target.value);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setSuccess("");
 
     try {
-      const response = await axios.post("/api/v1/auth/verify-otp", {
-        email,
-        otp,
-      });
+      // Verify OTP
+      await axios.post("/api/v1/auth/verify-otp", { email, otp });
 
-      // Save token and user data
+      // Login after OTP verification
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/auth/login",
+        { email, password: otp }, // Assuming OTP is used as a temporary password
+        { withCredentials: true }
+      );
+
+      // Save token to localStorage
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      // Remove verify email
-      localStorage.removeItem("verifyEmail");
-
-      setSuccess("Verification successful! Redirecting...");
-
-      // Redirect after a short delay
-      setTimeout(() => {
-        navigate("/welcome");
-      }, 1500);
+      // Redirect to welcome page
+      navigate("/welcome");
     } catch (error) {
       setError(
         error.response?.data?.message ||
-          "Verification failed. Please try again."
+          "Failed to verify OTP. Please try again."
       );
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleResendOTP = async () => {
-    setResendLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      await axios.post("/api/v1/auth/send-otp", { email });
-      setSuccess("OTP resent successfully!");
-      setCountdown(60); // Start 60 second countdown
-    } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          "Failed to resend OTP. Please try again."
-      );
-    } finally {
-      setResendLoading(false);
     }
   };
 
@@ -97,11 +51,8 @@ const VerifyOTP = () => {
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Verify Your Account
+          Verify OTP
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          We've sent a verification code to your email
-        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -116,42 +67,13 @@ const VerifyOTP = () => {
             </div>
           )}
 
-          {success && (
-            <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
-              <div className="flex">
-                <div className="ml-3">
-                  <p className="text-sm text-green-700">{success}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  disabled
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 bg-gray-50 sm:text-sm"
-                />
-              </div>
-            </div>
-
             <div>
               <label
                 htmlFor="otp"
                 className="block text-sm font-medium text-gray-700"
               >
-                Verification Code
+                OTP
               </label>
               <div className="mt-1">
                 <input
@@ -160,9 +82,7 @@ const VerifyOTP = () => {
                   type="text"
                   required
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  maxLength={6}
-                  placeholder="Enter 6-digit code"
+                  onChange={handleChange}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
               </div>
@@ -176,35 +96,14 @@ const VerifyOTP = () => {
                   loading ? "opacity-70 cursor-not-allowed" : ""
                 }`}
               >
-                {loading ? "Verifying..." : "Verify Account"}
+                {loading ? "Verifying..." : "Verify OTP"}
               </button>
             </div>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Didn't receive the code?{" "}
-              {countdown > 0 ? (
-                <span className="text-gray-500">Resend in {countdown}s</span>
-              ) : (
-                <button
-                  onClick={handleResendOTP}
-                  disabled={resendLoading || countdown > 0}
-                  className={`font-medium text-indigo-600 hover:text-indigo-500 ${
-                    resendLoading || countdown > 0
-                      ? "opacity-70 cursor-not-allowed"
-                      : ""
-                  }`}
-                >
-                  {resendLoading ? "Sending..." : "Resend Code"}
-                </button>
-              )}
-            </p>
-          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default VerifyOTP;
+export default VerifyOtp;

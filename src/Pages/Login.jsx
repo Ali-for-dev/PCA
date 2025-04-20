@@ -25,7 +25,11 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await axios.post("/api/v1/auth/login", formData);
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/auth/login",
+        formData,
+        { withCredentials: true }
+      );
 
       // Save token to localStorage
       localStorage.setItem("token", response.data.token);
