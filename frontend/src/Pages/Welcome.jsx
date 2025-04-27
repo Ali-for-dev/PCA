@@ -1,7 +1,10 @@
 // src/pages/Welcome.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from
+
+
+"axios";
 
 const Welcome = () => {
   const [user, setUser] = useState(null);

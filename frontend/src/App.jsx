@@ -1,83 +1,53 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// src/App.jsx
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import ProfPage from "./Pages/ProfPage";
+import Login from "./Pages/Login";
+import Register from "./Pages/Register";
+import VerifyOTP from "./Pages/VerifyOtp";
+import Welcome from "./Pages/Welcome";
+import LandingPage from "./Pages/LandingPage";  // ✅ L'import est correct
+import Ressource from "./Pages/Ressource";
+// ✅ Protected route component
+const ProtectedRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem("token");
 
-function SignUp() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+  if (!isAuthenticated) {
+    return <Navigate to="/landingpage" />;  // ✅ redirection vers le bon path (minuscule)
+  }
 
-  const handleSignUp = (e) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas !");
-      return;
-    }
+  return children;
+};
 
-    setError('');
-    alert('Inscription réussie !');
-    navigate('/authen2'); // redirection vers /authen2
-  };
-
+const App = () => {
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-semibold mb-6 text-center">Inscription</h2>
-        <form onSubmit={handleSignUp} className="space-y-4">
-          <div>
-            <label className="block mb-1">Identifiant</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              className="w-full border px-3 py-2 rounded"
-              placeholder="Votre identifiant"
-            />
-          </div>
-          <div>
-            <label className="block mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full border px-3 py-2 rounded"
-              placeholder="votre@email.com"
-            />
-          </div>
-          <div>
-            <label className="block mb-1">Mot de passe</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full border px-3 py-2 rounded"
-              placeholder="Mot de passe"
-            />
-          </div>
-          <div>
-            <label className="block mb-1">Confirmer le mot de passe</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="w-full border px-3 py-2 rounded"
-              placeholder="Confirmez le mot de passe"
-            />
-          </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-            S'inscrire
-          </button>
-        </form>
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/landingpage" />} />  {/* ✅ redirection de base */}
+      
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/verify-otp" element={<VerifyOTP />} />
+        <Route
+          path="/welcome"
+          element={
+            <ProtectedRoute>
+              <Welcome />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/landingpage" element={<LandingPage />} />  {/* ✅ ajouté ici */}
+        <Route path="/profpage" element={<ProfPage />} /> 
+        <Route path="/ressource" element={<Ressource />} />  {/* ✅ ajouté ici */}
+        <Route path="*" element={<Navigate to="/" />} />  {/* catch-all */}
+      </Routes>
+    </Router>
   );
-}
+};
 
-export default SignUp;
+export default App;

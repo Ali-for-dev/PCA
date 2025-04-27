@@ -23,20 +23,20 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
+   
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/auth/login",
+        "http://localhost:5000/api/v1/auth/verify-otp",
         formData,
         { withCredentials: true }
       );
 
       // Save token to localStorage
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
 
+// Redirect to welcome page
       // Redirect to welcome page
-      navigate("/welcome");
+     
     } catch (error) {
       setError(
         error.response?.data?.message || "Failed to login. Please try again."
